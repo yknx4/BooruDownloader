@@ -26,8 +26,25 @@ public class CombinedWriter : StreamWriter
         base.WriteLine(value);
     }
 }
+
+static class Tools
+    {
+    public static string ScrubFileName(string value)
+        {
+        StringBuilder sb = new StringBuilder(value);
+        char[] invalid = Path.GetInvalidFileNameChars();
+        foreach (char item in invalid)
+            {
+            sb.Replace(item.ToString(), "");
+            }
+        return sb.ToString();
+        }
+    }
+
 namespace BooruDownloader
 {
+
+    
     public class PostData
     {
         public PostData(){}
@@ -37,6 +54,7 @@ namespace BooruDownloader
     }
   public class SiteData
     {
+      
         public SiteData(){}
         public uint START_PAGE_INDEX;
         public int NUMBER_OF_THREADS;
@@ -52,7 +70,7 @@ namespace BooruDownloader
         public string IMAGECONTAINER_XPATH;
         public string FILEPATH_JOINER;
         public bool DelayInConnections = false;
-        public bool tagEvaluation;
+        //public bool tagEvaluation;
         public int DelayTime = 500;
         public int PID_MULT = 1;
     }
@@ -63,6 +81,9 @@ namespace BooruDownloader
         protected CombinedWriter OutputLog;
         protected string[] tags;
         protected SiteData site;
+        public virtual bool tagEvaluation(){
+            return readSite(site.START_PAGE_INDEX).Contains(site.CHECKTAGS_STRING);
+            } 
         protected HtmlDocument HTMLDoc = new HtmlDocument();
         public string Error;
         protected static Regex digitsOnly = new Regex("[^0-9]");
@@ -267,12 +288,10 @@ namespace BooruDownloader
         }
         public virtual string ParseFilePath(string FilePath)
         {
-            #region CORREGIR
-            //  FilePath = FilePath.Join("", FilePath.Split(Path.GetInvalidFileNameChars()));
-            //FilePath=FilePath.Join("",FilePath.Split(=Path.GetInvalidFileNameChars()));
-            #endregion
+            FilePath = Tools.ScrubFileName(FilePath);
             FilePath = FilePath.Replace("show ", "");
             FilePath = Uri.UnescapeDataString(FilePath);
+            
             if (FilePath.Length > 140)
             {
                 FilePath = FilePath.Substring(0, 140);
@@ -336,7 +355,7 @@ namespace BooruDownloader
         public virtual int GetPagesNumber() //Function to get the number of pages the tags have
         {
            string texto = readSite((uint)site.START_PAGE_INDEX);
-           OutputLog.WriteLine(texto);//Put RAW HTML in the String Texto
+           //OutputLog.WriteLine(texto);//Put RAW HTML in the String Texto
            // string texto = readSite((uint)(site.START_PAGE_INDEX+1));//Put RAW HTML in the String Texto
             if (!(texto == null)) //If the RAW HTML exist, do following code
             {
@@ -361,11 +380,11 @@ namespace BooruDownloader
         }
         public void startDownloader(string[] args, SiteData SiteData)
         {
-            Console.Title = SiteData.SITE_NAME + " Batch image downloader";
+            //Console.Title = SiteData.SITE_NAME + " Batch image downloader";
             bool CheckTags = false;
             if (args == null || args.Length == 0)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
+                //Console.ForegroundColor = ConsoleColor.Red;
                 OutputLog.WriteLine("Specify the tags to crawl");
                 OutputLog.WriteLine("Usage: " + SiteData.SITE_NAME + " moe suzumiya_haruhi");
                 OutputLog.WriteLine("To download pictures with tags moe and suzumiya_haruhi");
@@ -379,17 +398,17 @@ namespace BooruDownloader
                 //tags = tags_content;
                 /*Array.Reverse(args);
                 Array.Resize(args,args.Length -1);*/
-                tags = args;
+                tags = args;/*
 #if !Moebooru
                 CheckTags = readSite(site.START_PAGE_INDEX).Contains(site.CHECKTAGS_STRING);
-#endif
+#endif*//*
 #if Moebooru
 			CheckTags=readSite(site.START_PAGE_INDEX).Contains("<a class=\"directlink largeimg\"")||readSite(site.START_PAGE_INDEX).Contains("<a class=\"directlink smallimg\"");
-#endif
+#endif*/
 #if DEBUG
                 OutputLog.WriteLine("Checking tags.... Returned " + CheckTags);
 #endif // DEBUGGING
-                if (CheckTags)
+                if (tagEvaluation())
                 {
                     Thread.Sleep(site.DelayTime);
                     int TotalPages = GetPagesNumber();
@@ -410,9 +429,9 @@ namespace BooruDownloader
         {
             if (PostUrl == null)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
+                //Console.ForegroundColor = ConsoleColor.Red;
                 OutputLog.WriteLine("URL Cannot be Null");
-                Console.ResetColor();
+               // Console.ResetColor();
                 throw new ArgumentNullException();
             }
             PostUrl = Uri.UnescapeDataString(PostUrl);
@@ -433,9 +452,9 @@ namespace BooruDownloader
             }
             if (RawHtml == null)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
+                //Console.ForegroundColor = ConsoleColor.Red;
                 OutputLog.WriteLine("No HTML Found, giving null");
-                Console.ResetColor();
+               // Console.ResetColor();
                 return null;
             }
             PostData PostData = new PostData();
@@ -567,11 +586,16 @@ namespace BooruDownloader
             FilePath = FilePath.Replace("Konachan.com%20-%20", "");
             FilePath = Uri.UnescapeDataString(FilePath);
             //FilePath=FilePath.Join("",FilePath.Split(IO.Path.GetInvalidFileNameChars()));
+            FilePath = Tools.ScrubFileName(FilePath);
             if (FilePath.Length > 140)
             {
                 FilePath = FilePath.Substring(0, 140);
             }
             return FilePath;
         }
+        public override bool tagEvaluation()
+            {
+            return readSite(site.START_PAGE_INDEX).Contains("<a class=\"directlink largeimg\"") || readSite(site.START_PAGE_INDEX).Contains("<a class=\"directlink smallimg\""); 
+            }
     }
 }

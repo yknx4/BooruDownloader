@@ -60,6 +60,10 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Pages\log.xaml.cs">
+      <DependentUpon>log.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TextBoxStreamWriter.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -84,6 +88,10 @@
     </Compile>
     <Compile Include="Content\SettingsAppearanceViewModel.cs" />
     <Page Include="Pages\Home.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\log.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -12,6 +12,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.IO;
+using booruGui__WFA_;
 
 namespace booruGui__Modern_.Pages
 {
@@ -20,9 +22,12 @@ namespace booruGui__Modern_.Pages
     /// </summary>
     public partial class Home : UserControl
     {
+       // TextWriter _writer;
         public Home()
         {
             InitializeComponent();
+            //_writer = new TextWriter(txtbox);
+           // Console.SetOut(_writer);
         }
     }
 }

@@ -8,7 +8,22 @@
     <Grid Style="{StaticResource ContentRoot}">
         <ScrollViewer>
             <StackPanel MinWidth="200">
-                <TextBlock Text="TODO: add content" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        
+                    </Grid.ColumnDefinitions>
+                    <Label Content="Tags:" Grid.Column="0" Margin="0,0,5,0" Foreground="White"/>
+                    <TextBox Grid.Column="1" MinWidth="300" Margin="0,0,5,0"></TextBox>
+                    <ComboBox Grid.Column="2" MinWidth="75" Margin="0,0,5,0"></ComboBox>
+                    <Button Grid.Column="3" Content="Get" Margin="0,0,5,0"></Button>
+                    
+                </Grid>
+                
+
             </StackPanel>
         </ScrollViewer>
     </Grid>

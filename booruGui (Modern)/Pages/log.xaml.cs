@@ -1,5 +1,4 @@
-﻿using FirstFloor.ModernUI.Windows.Controls;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,22 +14,20 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
 using booruGui__WFA_;
-using booruGui__Modern_.Pages;
 
-namespace booruGui__Modern_
-{
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : ModernWindow
+namespace booruGui__Modern_.Pages
     {
-        
-        public MainWindow()
+    /// <summary>
+    /// Interaction logic for log.xaml
+    /// </summary>
+    public partial class log : UserControl
         {
+        public TextWriter _writer;
+        public log()
+            {
+            _writer = new TextBoxStreamWriter(txtLog);
+            Console.SetOut(_writer);
             InitializeComponent();
-        //    _writer = new TextBoxStreamWriter(logPage.txtLog);
-            // Redirect the out Console stream
-         //  Console.SetOut(_writer);
+            }
         }
     }
-}

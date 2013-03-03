@@ -7,7 +7,7 @@
     <ProjectGuid>{8B49B366-04EC-456C-A331-5C00B941273F}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>booruGui__WFA_</RootNamespace>
+    <RootNamespace>booruGui__TextBoxStreamWriter_</RootNamespace>
     <AssemblyName>booruGui %28WFA%29</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -64,6 +64,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

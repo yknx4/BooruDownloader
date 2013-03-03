@@ -5,7 +5,7 @@ using System.Text;
 using System.IO;
 using System.Windows.Forms;
 
-namespace booruGui__WFA_
+namespace booruGui__TextBoxStreamWriter_
     {
     public class TextBoxStreamWriter : TextWriter
         {

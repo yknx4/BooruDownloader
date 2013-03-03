@@ -1,4 +1,4 @@
-﻿namespace booruGui__WFA_
+﻿namespace booruGui__TextBoxStreamWriter_
     {
     partial class Form1
         {

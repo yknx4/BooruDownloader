@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace booruGui__WFA_
+namespace booruGui__TextBoxStreamWriter_
     {
     static class Program
         {

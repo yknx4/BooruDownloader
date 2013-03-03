@@ -16,7 +16,7 @@ namespace ConsoleTest
             {
                 Console.WriteLine(v);
             }
-            BooruDownloader.danbooruDownloader Downloader = new BooruDownloader.danbooruDownloader();
+            
             Console.Title = "Batch image downloader";
             SiteData SiteData = new SiteData();
             SiteData.SITE_DOMAIN = "http://ichijou.org";
@@ -33,7 +33,8 @@ namespace ConsoleTest
             SiteData.IMAGECONTAINER_XPATH = "//div[@class='content']/div/img[@id='image']";
             SiteData.FILEPATH_JOINER = "";
             SiteData.DelayInConnections = false;
-            Downloader.startDownloader(args, SiteData);
+            BooruDownloader.danbooruDownloader Downloader = new BooruDownloader.danbooruDownloader(SiteData,args);
+            Downloader.startDownloader();
 #if DEBUG
             Console.ReadKey();
 #endif // _DEBUG

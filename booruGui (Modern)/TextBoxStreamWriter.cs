@@ -14,7 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace booruGui__WFA_
+namespace booruGui__TextBoxStreamWriter_
     {
     public class TextBoxStreamWriter : TextWriter
         {
@@ -25,12 +25,24 @@ namespace booruGui__WFA_
             _output = output;
             }
 
-        public override void Write(char value)
+       /* public override void Write(char value)
             {
             base.Write(value);
             _output.AppendText(value.ToString()); // When character data is written, append it to the text box.
+            }*/
+        public override void Write(char[] buffer, int index, int count)
+            {
+            base.Write(buffer, index, count);
+            _output.AppendText(new string(buffer));
             }
-
+       /* public override void Write(bool value)
+            {
+            base.Write(value);
+            }
+        public override void Write(string value)
+            {
+            base.Write(value);
+            }*/
         public override Encoding Encoding
             {
             get { return System.Text.Encoding.UTF8; }

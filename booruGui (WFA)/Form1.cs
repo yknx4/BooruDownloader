@@ -9,11 +9,11 @@ using System.Windows.Forms;
 using System.IO;
 using BooruDownloader;
 
-namespace booruGui__WFA_
+namespace booruGui__TextBoxStreamWriter_
     {
     public partial class Form1 : Form
         {
-        danbooruDownloader Downloader = new danbooruDownloader();
+        danbooruDownloader Downloader;
         TextWriter _writer = null;
         public Form1()
             {
@@ -51,7 +51,8 @@ namespace booruGui__WFA_
             SiteData.IMAGECONTAINER_XPATH = "//div[@class='content']/div/img[@id='image']";
             SiteData.FILEPATH_JOINER = "";
             SiteData.DelayInConnections = false;
-            Downloader.startDownloader(args, SiteData);
+            new danbooruDownloader(SiteData, args);
+            Downloader.startDownloader();
             }
 
         

@@ -17,9 +17,9 @@
                         
                     </Grid.ColumnDefinitions>
                     <Label Content="Tags:" Grid.Column="0" Margin="0,0,5,0" Foreground="White"/>
-                    <TextBox Grid.Column="1" MinWidth="300" Margin="0,0,5,0"></TextBox>
-                    <ComboBox Grid.Column="2" MinWidth="75" Margin="0,0,5,0"></ComboBox>
-                    <Button Grid.Column="3" Content="Get" Margin="0,0,5,0"></Button>
+                    <TextBox x:Name="txtTags" Grid.Column="1" MinWidth="300" Margin="0,0,5,0"></TextBox>
+                    <ComboBox x:Name="cmbSourceServer" Grid.Column="2" MinWidth="75" Margin="0,0,5,0" DataContextChanged="cmbSourceServer_DataContextChanged" SelectedIndex="0"></ComboBox>
+                    <Button Grid.Column="3" Content="Get" Margin="0,0,5,0" Click="Button_Click_1"></Button>
                     
                 </Grid>
                 

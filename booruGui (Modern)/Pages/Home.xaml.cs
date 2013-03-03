@@ -1,7 +1,13 @@
-﻿using System;
+﻿using BooruDownloader;
+using booruGui__Modern_;
+using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,22 +18,44 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.IO;
-using booruGui__WFA_;
-
+//using serverLoader;
 namespace booruGui__Modern_.Pages
-{
+    {
     /// <summary>
     /// Interaction logic for Home.xaml
     /// </summary>
     public partial class Home : UserControl
-    {
-       // TextWriter _writer;
-        public Home()
         {
+        // TextWriter _writer;
+        //private CustomConfigurationFileReader serverConfigFile = new CustomConfigurationFileReader("");
+        //private ConfigurationManager 
+        public serverLoader Loader = new serverLoader(ConfigurationManager.AppSettings);
+        public Home()
+            {
+
             InitializeComponent();
-            //_writer = new TextWriter(txtbox);
-           // Console.SetOut(_writer);
+            foreach (SiteData site in Loader.Sites)
+                {
+                ComboBoxItem item_to_add = new ComboBoxItem();
+                item_to_add.Name = site.SITE_NAME;
+                item_to_add.ToolTip = site.SITE_NAME;
+                // item.
+                item_to_add.Content = site.SITE_NAME;
+                cmbSourceServer.Items.Add(item_to_add);
+                }
+            }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+            {
+            String[] matches = Regex.Matches(txtTags.Text, @""".*?""|[^\s]+").Cast<Match>().Select(m => m.Value).ToArray();
+            BooruDownloader.danbooruDownloader Downloader = new BooruDownloader.danbooruDownloader(Loader[cmbSourceServer.SelectedIndex],matches);
+            Downloader.startDownloader();
+            }
+
+        private void cmbSourceServer_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+            {
+            //ComboBox origin = (ComboBox)sender;
+            //origin.Items.
+            }
         }
     }
-}

@@ -5,11 +5,23 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:mui="http://firstfloorsoftware.com/ModernUI"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DesignHeight="600" d:DesignWidth="800">
     <Grid Style="{StaticResource ContentRoot}">
         <ScrollViewer>
             <StackPanel MinWidth="200">
-                <RichTextBox x:Name="txtLog" MinHeight="400" MaxWidth="600" IsReadOnly="True"></RichTextBox>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="*" MaxHeight="800"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Button Grid.Row="0" Content="Clear Log" Click="Button_Click_1"></Button>
+                    <RichTextBox Grid.Row="1"  x:Name="txtLog" MaxHeight="400" MaxWidth="600" IsReadOnly="True" x:FieldModifier="public"></RichTextBox>
+                    <Button Grid.Row="2" Content="SaveLog" Click="clickbtn"></Button>
+                    <Label Content="" Grid.Row="3" Visibility="Hidden" Name="lblMessage" Foreground="White"></Label>
+                </Grid>
+                
             </StackPanel>
         </ScrollViewer>
     </Grid>

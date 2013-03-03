@@ -56,7 +56,7 @@ namespace BooruDownloader
         {
 
         public SiteData() { }
-#if Debug
+#if DEBUG
         public void printValues()
             {
             Console.WriteLine(START_PAGE_INDEX);
@@ -108,21 +108,25 @@ namespace BooruDownloader
                     {
                     case Downloaders.moebooru:
                         return new moebooruDownloader(SiteData, args);
-                        break;
+                 //      break;
                     case Downloaders.danbooru:
                         return new danbooruDownloader(SiteData, args);
-                        break;
+                      //  break;
                     case Downloaders.gelbooru:
                         return new gelbooruDownloader(SiteData, args);
-                        break;
+                     //   break;
                     default:
                         return new danbooruDownloader(SiteData, args);
-                        break;
+                     //   break;
                     }
                 }
             return new danbooruDownloader(SiteData, args);
             //return new moebooruDownloader(SiteData,args);
             }
+       // public delegate void booru(SiteData SiteData, string[] args);
+        public delegate void booruVoidDelegate();
+        public delegate bool booruBoolDelegate();
+        public delegate int booruIntDelegate();
         public danbooruDownloader(SiteData SiteData, string[] args)
             {
             if (args == null || args.Length == 0)
@@ -443,7 +447,7 @@ namespace BooruDownloader
         public void startDownloader()
             {
             //Console.Title = SiteData.SITE_NAME + " Batch image downloader";
-            bool CheckTags = false;
+           // bool CheckTags = false;
 
             /*
 #if !Moebooru
@@ -452,10 +456,12 @@ namespace BooruDownloader
             /*
     #if Moebooru
                 CheckTags=readSite(site.START_PAGE_INDEX).Contains("<a class=\"directlink largeimg\"")||readSite(site.START_PAGE_INDEX).Contains("<a class=\"directlink smallimg\"");
-    #endif*/
+    #endif*//*
 #if DEBUG
             OutputLog.WriteLine("Checking tags.... Returned " + CheckTags);
-#endif // DEBUGGING
+#endif // DEBUGGING*/
+            booruBoolDelegate tagEvaluation = new booruBoolDelegate(this.tagEvaluation);
+            booruIntDelegate GetPagesNumber = new booruIntDelegate(this.GetPagesNumber);
             if (tagEvaluation())
                 {
                 Thread.Sleep(site.DelayTime);

@@ -30,6 +30,7 @@ namespace booruGui__Modern_.Pages
         //private CustomConfigurationFileReader serverConfigFile = new CustomConfigurationFileReader("");
         //private ConfigurationManager 
         public serverLoader Loader = new serverLoader(ConfigurationManager.AppSettings);
+        public delegate void voidDelegate();
         public Home()
             {
 
@@ -47,9 +48,20 @@ namespace booruGui__Modern_.Pages
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
             {
-            String[] matches = Regex.Matches(txtTags.Text, @""".*?""|[^\s]+").Cast<Match>().Select(m => m.Value).ToArray();
-            BooruDownloader.danbooruDownloader Downloader = new BooruDownloader.danbooruDownloader(Loader[cmbSourceServer.SelectedIndex],matches);
-            Downloader.startDownloader();
+            if (txtTags.Text == "")
+                {
+                txtTags.Focus();
+                }
+            else
+                {
+                String[] matches = Regex.Matches(txtTags.Text, @""".*?""|[^\s]+").Cast<Match>().Select(m => m.Value).ToArray();
+                BooruDownloader.danbooruDownloader Downloader = new BooruDownloader.danbooruDownloader(Loader[cmbSourceServer.SelectedIndex], matches);
+                //booruDelegate
+                voidDelegate startDownloader = new voidDelegate(Downloader.startDownloader);
+                //Downloader.startDownloader();
+                startDownloader();
+                }
+
             }
 
         private void cmbSourceServer_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)

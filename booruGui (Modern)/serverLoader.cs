@@ -70,7 +70,7 @@ namespace booruGui__Modern_
                 Sites[i].DelayInConnections = stringToBool(siteOptions["delayInConnections"].Value);
                 Sites[i].type = siteOptions["type"].Value;
                 //Console.WriteLine(siteOptions["domain"].Value);
-#if Debug
+#if DEBUG
                 Sites[i].printValues();
 #endif
                 }

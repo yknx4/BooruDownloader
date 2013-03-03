@@ -74,7 +74,7 @@ namespace booruGui__Modern_.Pages
         private void Button_Click_1(object sender, RoutedEventArgs e)
             {
             txtLog.Document.Blocks.Clear();
-            serverLoader Loader2 = new serverLoader(ConfigurationManager.AppSettings);
+            //serverLoader Loader2 = new serverLoader(ConfigurationManager.AppSettings);
             }
         }
     }

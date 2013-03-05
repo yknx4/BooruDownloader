@@ -79,6 +79,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Logger.cs" />
     <Compile Include="logStreamWriter.cs" />
     <Compile Include="Pages\log.xaml.cs">
       <DependentUpon>log.xaml</DependentUpon>

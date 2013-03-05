@@ -59,7 +59,10 @@ namespace booruGui__Modern_.Pages
                 //booruDelegate
                 voidDelegate startDownloader = new voidDelegate(Downloader.startDownloader);
                 //Downloader.startDownloader();
-                startDownloader();
+                System.Threading.ThreadStart ts = new System.Threading.ThreadStart(startDownloader);
+                System.Threading.Thread t = new System.Threading.Thread(ts);
+                t.Start();
+                //startDownloader();
                 }
 
             }

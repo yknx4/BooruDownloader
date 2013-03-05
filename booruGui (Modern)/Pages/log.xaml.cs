@@ -76,5 +76,12 @@ namespace booruGui__Modern_.Pages
             txtLog.Document.Blocks.Clear();
             //serverLoader Loader2 = new serverLoader(ConfigurationManager.AppSettings);
             }
+
+        private void logLoad(object sender, RoutedEventArgs e)
+            {
+           /* NavigationService navService = NavigationService.GetNavigationService(this);
+            navService.Navigate(new System.Uri("Pages/Home.xaml",UriKind.Absolute)); */
+
+            }
         }
     }

@@ -7,126 +7,33 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-public class CombinedWriter : StreamWriter
-    {
-    TextWriter console;
-    public CombinedWriter(string path, bool append, Encoding encoding, int bufferSize, TextWriter console)
-        : base(path, append, encoding, bufferSize)
-        {
-        this.console = console;
-        }
-    public override void Write(string value)
-        {
-        console.Write(value);
-        base.Write(value);
-        }
-    public override void WriteLine(string value)
-        {
-        Console.WriteLine(value);
-        base.WriteLine(value);
-        }
-    }
-
-static class Tools
-    {
-    public static string ScrubFileName(string value)
-        {
-        StringBuilder sb = new StringBuilder(value);
-        char[] invalid = Path.GetInvalidFileNameChars();
-        foreach (char item in invalid)
-            {
-            sb.Replace(item.ToString(), "");
-            }
-        return sb.ToString();
-        }
-    }
-
 namespace BooruDownloader
     {
 
     enum Downloaders { danbooru, moebooru, gelbooru }
-    public class PostData
-        {
-        public PostData() { }
-        public string link;
-        public string tags;
-        public int id;
-        }
-    public class SiteData
-        {
-
-        public SiteData() { }
-#if DEBUG
-        public void printValues()
-            {
-            Console.WriteLine(START_PAGE_INDEX);
-            Console.WriteLine(NUMBER_OF_THREADS);
-            Console.WriteLine(SEGMENTDEPTH_FOR_ID);
-            Console.WriteLine(SITE_DOMAIN);
-            Console.WriteLine(SITE_NAME);
-            Console.WriteLine(USER_AGENT_STRING);
-            Console.WriteLine(CHECKTAGS_STRING);
-            Console.WriteLine(ACCESSPAGE_STRING);
-            Console.WriteLine(POSTTAGS_STRING);
-            Console.WriteLine(PAGENUMBER_XPATH);
-            Console.WriteLine(POSTLINKS_XPATH);
-            Console.WriteLine(IMAGECONTAINER_XPATH);
-            Console.WriteLine(FILEPATH_JOINER);
-            Console.WriteLine(DelayInConnections);
-            Console.WriteLine(PID_MULT);
-            Console.WriteLine(type);
-            }
-#endif
-        public uint START_PAGE_INDEX;
-        public int NUMBER_OF_THREADS;
-        public int SEGMENTDEPTH_FOR_ID;
-        public string SITE_DOMAIN;
-        public string SITE_NAME;
-        public string USER_AGENT_STRING;
-        public string CHECKTAGS_STRING;
-        public string ACCESSPAGE_STRING;
-        public string POSTTAGS_STRING;
-        public string PAGENUMBER_XPATH;
-        public string POSTLINKS_XPATH;
-        public string IMAGECONTAINER_XPATH;
-        public string FILEPATH_JOINER;
-        public bool DelayInConnections = false;
-        //public bool tagEvaluation;
-        public int DelayTime = 500;
-        public int PID_MULT = 1;
-        public string type = "danbooru";
-        }
     //  class ThreadGroup { }
     public class danbooruDownloader
         {
-        static public danbooruDownloader getDownloader(SiteData SiteData, string[] args)
-            {
-            Downloaders type;
-            if (Enum.TryParse(SiteData.type, out type))
-                {
-                switch (type)
-                    {
-                    case Downloaders.moebooru:
-                        return new moebooruDownloader(SiteData, args);
-                 //      break;
-                    case Downloaders.danbooru:
-                        return new danbooruDownloader(SiteData, args);
-                      //  break;
-                    case Downloaders.gelbooru:
-                        return new gelbooruDownloader(SiteData, args);
-                     //   break;
-                    default:
-                        return new danbooruDownloader(SiteData, args);
-                     //   break;
-                    }
-                }
-            return new danbooruDownloader(SiteData, args);
-            //return new moebooruDownloader(SiteData,args);
-            }
-       // public delegate void booru(SiteData SiteData, string[] args);
-        public delegate void booruVoidDelegate();
-        public delegate bool booruBoolDelegate();
-        public delegate int booruIntDelegate();
+        public static WebClient Reader = new WebClient();
+
+        public string Error;
+
+        protected static Regex digitsOnly = new Regex("[^0-9]");
+
+        protected HtmlDocument HTMLDoc = new HtmlDocument();
+
+        protected CombinedWriter OutputLog;
+
+        protected SiteData site;
+
+        protected string[] tags;
+
+        public int numberOfPages;
+
+        public bool hasPages;
+
+        private bool isStarted;
+
         public danbooruDownloader(SiteData SiteData, string[] args)
             {
             if (args == null || args.Length == 0)
@@ -143,149 +50,37 @@ namespace BooruDownloader
             tags = args;
 
             }
-        protected CombinedWriter OutputLog;
-        protected string[] tags;
-        protected SiteData site;
-        public virtual bool tagEvaluation()
+
+        public delegate bool booruBoolDelegate();
+
+        public delegate int booruIntDelegate();
+
+        // public delegate void booru(SiteData SiteData, string[] args);
+        public delegate void booruVoidDelegate();
+
+        static public danbooruDownloader getDownloader(SiteData SiteData, string[] args)
             {
-            return readSite(site.START_PAGE_INDEX).Contains(site.CHECKTAGS_STRING);
-            }
-        protected HtmlDocument HTMLDoc = new HtmlDocument();
-        public string Error;
-        protected static Regex digitsOnly = new Regex("[^0-9]");
-        public static WebClient Reader = new WebClient();
-        protected string getRawHtml(Uri url)
-            {
-            string OutputHTML;
-
-#if DEBUG
-            OutputLog.WriteLine("getRawHtml called with " + url);
-#endif
-
-
-            try
+            Downloaders type;
+            if (Enum.TryParse(SiteData.type, out type))
                 {
-                OutputHTML = Reader.DownloadString(url);
-                }
-            catch (WebException ex)
-                {
-                Error = "GetRawHtml failed because " + ex;
-                OutputLog.WriteLine(Error);
-                return null;
-                }
-            catch (ArgumentNullException ex)
-                {
-                Error = "You have to have an input " + ex;
-                OutputLog.WriteLine(Error);
-                throw ex;
-                }
-            return OutputHTML;
-            }
-        protected string readSite(uint page)
-            {
-            /* if (page == null)
-             {
-                 throw new ArgumentOutOfRangeException();
-             }*/
-            Uri URL;
-            string Page_Data = null;//RAW Html string initialization
-            String TmpUrl = site.SITE_DOMAIN + site.ACCESSPAGE_STRING + (page * site.PID_MULT).ToString() + site.POSTTAGS_STRING;//URL String initialization
-            foreach (string tag in tags)//Cycle to add each tag to URL
-                {
-                TmpUrl += tag + "+";//each tags must be separated by '+' so each tag is added to URL after '+'
-                }
-            TmpUrl = TmpUrl.Remove(TmpUrl.Length - 1);//removes the extra '+' from URL output
-            URL = new Uri(TmpUrl);
-            try
-                {
-                Page_Data = getRawHtml(URL);
-                }
-            catch (ArgumentNullException e)
-                {
-
-                OutputLog.WriteLine("URL Must have a value");
-                OutputLog.WriteLine("Error: " + e);
-                }
-            if (Page_Data == null) //In case of Webexception the following code is run
-                {
-                OutputLog.WriteLine("Cannot connect to Host");
-                OutputLog.WriteLine("Is Internet connection alive?");
-                }
-            return Page_Data; //Returns RAW HTLM string    
-            }
-        protected HtmlNodeCollection getHtmlNodes(string RawHtml, string Xpath)
-            {
-            /*if (RawHtml == null || Xpath == null)
-            {
-                throw new ArgumentNullException();
-            }*/
-            try
-                {
-                //initialize HTML Documents
-                HTMLDoc.LoadHtml(RawHtml);//load Html from RAW Html string
-                HtmlNode nodo_p = HTMLDoc.DocumentNode; //Get Nodes from HTML Doc
-                return nodo_p.SelectNodes(Xpath); //Select all nodes with direct image link
-                }
-            catch (ArgumentNullException e)
-                {
-
-                OutputLog.WriteLine("GetHtmlNodes failed because " + e);
-
-                return null;
-                }
-            }
-        public virtual PostData[] getDownloadData(uint page)
-            {
-            string RawHtml = null;
-            HtmlNodeCollection HtmlNodes;
-            try
-                {
-                RawHtml = readSite(page);
-                }
-            catch (ArgumentOutOfRangeException e)
-                {
-
-                OutputLog.WriteLine("Page must be positive");
-                OutputLog.WriteLine("Error: " + e);
-                }
-
-            if (RawHtml == null)
-                {
-                throw new ArgumentNullException();
-                }
-
-            HtmlNodes = getHtmlNodes(RawHtml, site.POSTLINKS_XPATH);
-            if (HtmlNodes == null || HtmlNodes.Count == 0)
-                {
-                OutputLog.WriteLine("No nodes were found with the specified XPath");
-                return null;
-                }
-#if DEBUG
-            OutputLog.WriteLine("Total nodes in GetDownloadLink are: " + HtmlNodes.Count);
-#endif // DEBUGGING
-            PostData[] LinkData = new PostData[HtmlNodes.Count];
-            int nodecount = 0;
-            foreach (HtmlNode a_refs in HtmlNodes)
-                {
-                if (site.DelayInConnections) Thread.Sleep(site.DelayTime);
-                PostData a_r_data = null;
-                try
+                switch (type)
                     {
-                    a_r_data = GetPostData(site.SITE_DOMAIN + site.FILEPATH_JOINER + a_refs.GetAttributeValue("href", ""));
+                    case Downloaders.moebooru:
+                        return new moebooruDownloader(SiteData, args);
+                    //      break;
+                    case Downloaders.danbooru:
+                        return new danbooruDownloader(SiteData, args);
+                    //  break;
+                    case Downloaders.gelbooru:
+                        return new gelbooruDownloader(SiteData, args);
+                    //   break;
+                    default:
+                        return new danbooruDownloader(SiteData, args);
+                    //   break;
                     }
-                catch (ArgumentNullException e)
-                    {
-                    OutputLog.WriteLine("Gotta give a valid url");
-                    OutputLog.WriteLine("Error: " + e);
-                    }
-                LinkData[nodecount] = a_r_data;
-                //OutputLog.WriteLine(Links[nodecount]);
-                nodecount++;
                 }
-#if DEBUG
-            OutputLog.WriteLine("The total nodes processed are " + nodecount);
-#endif // DEBUGGING
-            return LinkData;
+            return new danbooruDownloader(SiteData, args);
+            //return new moebooruDownloader(SiteData,args);
             }
         public virtual void DownloadFiles(object data)
             {
@@ -352,18 +147,89 @@ namespace BooruDownloader
 
                 }
             }
-        public virtual string ParseFilePath(string FilePath)
-            {
-            FilePath = Tools.ScrubFileName(FilePath);
-            FilePath = FilePath.Replace("show ", "");
-            FilePath = Uri.UnescapeDataString(FilePath);
 
-            if (FilePath.Length > 140)
+        public virtual PostData[] getDownloadData(uint page)
+            {
+            string RawHtml = null;
+            HtmlNodeCollection HtmlNodes;
+            try
                 {
-                FilePath = FilePath.Substring(0, 140);
+                RawHtml = readSite(page);
                 }
-            return FilePath;
+            catch (ArgumentOutOfRangeException e)
+                {
+
+                OutputLog.WriteLine("Page must be positive");
+                OutputLog.WriteLine("Error: " + e);
+                }
+
+            if (RawHtml == null)
+                {
+                throw new ArgumentNullException();
+                }
+
+            HtmlNodes = getHtmlNodes(RawHtml, site.POSTLINKS_XPATH);
+            if (HtmlNodes == null || HtmlNodes.Count == 0)
+                {
+                OutputLog.WriteLine("No nodes were found with the specified XPath");
+                return null;
+                }
+#if DEBUG
+            OutputLog.WriteLine("Total nodes in GetDownloadLink are: " + HtmlNodes.Count);
+#endif // DEBUGGING
+            PostData[] LinkData = new PostData[HtmlNodes.Count];
+            int nodecount = 0;
+            foreach (HtmlNode a_refs in HtmlNodes)
+                {
+                if (site.DelayInConnections) Thread.Sleep(site.DelayTime);
+                PostData a_r_data = null;
+                try
+                    {
+                    a_r_data = GetPostData(site.SITE_DOMAIN + site.FILEPATH_JOINER + a_refs.GetAttributeValue("href", ""));
+                    }
+                catch (ArgumentNullException e)
+                    {
+                    OutputLog.WriteLine("Gotta give a valid url");
+                    OutputLog.WriteLine("Error: " + e);
+                    }
+                LinkData[nodecount] = a_r_data;
+                //OutputLog.WriteLine(Links[nodecount]);
+                nodecount++;
+                }
+#if DEBUG
+            OutputLog.WriteLine("The total nodes processed are " + nodecount);
+#endif // DEBUGGING
+            return LinkData;
             }
+
+        protected virtual void GetPagesNumber() //Function to get the number of pages the tags have
+            {
+            string texto = readSite((uint)site.START_PAGE_INDEX);
+            int numberOfPages=1;
+            //OutputLog.WriteLine(texto);//Put RAW HTML in the String Texto
+            // string texto = readSite((uint)(site.START_PAGE_INDEX+1));//Put RAW HTML in the String Texto
+            if (!(texto == null)) //If the RAW HTML exist, do following code
+                {
+                string PageTemp = null; // Create string pointer to get inner text from Html Node
+                HtmlNodeCollection nodos_a = getHtmlNodes(texto, site.PAGENUMBER_XPATH); //Select 'a' nodes from 'div' with class='pagination'
+                try //Try to read nodes
+                    {
+                    nodos_a.RemoveAt(nodos_a.Count - 1); //Remove an extra node that doesn't fullfill our needance
+                    foreach (HtmlNode var in nodos_a) // Cycle foreach node
+                        {
+                        PageTemp = var.InnerText; //Put the data in PageTemp variable
+                        }
+                    numberOfPages = Convert.ToInt32(PageTemp, 10); //Return the last PageTemp, and so the biggest number, meanning the last page
+                    }
+                catch (NullReferenceException e) //If no div availavable, means it just have 1 page
+                    {
+                    OutputLog.WriteLine("Return 1 page because of " + e);
+                    }
+                }
+            this.numberOfPages = nu;//in any case return 1 page, to avoid program crash, further errors are handled after
+
+            }
+
         public virtual PostData GetPostData(string PostUrl)
             {
             if (PostUrl == null)
@@ -412,61 +278,41 @@ namespace BooruDownloader
                 }
             return null;
             }
+
         public virtual string ParseFileExtension(string FileExtension, int ID = 0)
             {
             FileExtension = FileExtension.Replace("jpeg", "jpg");
             FileExtension = FileExtension.Substring(FileExtension.Length - 4, 4);
             return FileExtension;
             }
-        public virtual int GetPagesNumber() //Function to get the number of pages the tags have
+
+        public virtual string ParseFilePath(string FilePath)
             {
-            string texto = readSite((uint)site.START_PAGE_INDEX);
-            //OutputLog.WriteLine(texto);//Put RAW HTML in the String Texto
-            // string texto = readSite((uint)(site.START_PAGE_INDEX+1));//Put RAW HTML in the String Texto
-            if (!(texto == null)) //If the RAW HTML exist, do following code
+            FilePath = Tools.ScrubFileName(FilePath);
+            FilePath = FilePath.Replace("show ", "");
+            FilePath = Uri.UnescapeDataString(FilePath);
+
+            if (FilePath.Length > 140)
                 {
-                string PageTemp = null; // Create string pointer to get inner text from Html Node
-                HtmlNodeCollection nodos_a = getHtmlNodes(texto, site.PAGENUMBER_XPATH); //Select 'a' nodes from 'div' with class='pagination'
-                try //Try to read nodes
-                    {
-                    nodos_a.RemoveAt(nodos_a.Count - 1); //Remove an extra node that doesn't fullfill our needance
-                    foreach (HtmlNode var in nodos_a) // Cycle foreach node
-                        {
-                        PageTemp = var.InnerText; //Put the data in PageTemp variable
-                        }
-                    return Convert.ToInt32(PageTemp, 10); //Return the last PageTemp, and so the biggest number, meanning the last page
-                    }
-                catch (NullReferenceException e) //If no div availavable, means it just have 1 page
-                    {
-                    OutputLog.WriteLine("Return 1 page because of " + e);
-                    return 1;	//return 1 page
-                    }
+                FilePath = FilePath.Substring(0, 140);
                 }
-            return 1;//in any case return 1 page, to avoid program crash, further errors are handled after
+            return FilePath;
             }
+
         public void startDownloader()
             {
-            //Console.Title = SiteData.SITE_NAME + " Batch image downloader";
-           // bool CheckTags = false;
-
-            /*
-#if !Moebooru
-            CheckTags = readSite(site.START_PAGE_INDEX).Contains(site.CHECKTAGS_STRING);
-#endif*/
-            /*
-    #if Moebooru
-                CheckTags=readSite(site.START_PAGE_INDEX).Contains("<a class=\"directlink largeimg\"")||readSite(site.START_PAGE_INDEX).Contains("<a class=\"directlink smallimg\"");
-    #endif*//*
-#if DEBUG
-            OutputLog.WriteLine("Checking tags.... Returned " + CheckTags);
-#endif // DEBUGGING*/
-            booruBoolDelegate tagEvaluation = new booruBoolDelegate(this.tagEvaluation);
-            booruIntDelegate GetPagesNumber = new booruIntDelegate(this.GetPagesNumber);
-            if (tagEvaluation())
+            booruVoidDelegate tagEvaluation = new booruVoidDelegate(this.tagEvaluation);
+            booruVoidDelegate GetPagesNumber = new booruVoidDelegate(this.GetPagesNumber);
+            tagEvaluation();
+            if (hasPages)
                 {
                 Thread.Sleep(site.DelayTime);
-                int TotalPages = GetPagesNumber();
-                OutputLog.WriteLine("Will download " + TotalPages + " pages.");
+                GetPagesNumber();
+
+                System.Threading.ThreadStart ts = new System.Threading.ThreadStart(ExpansiveMethod);
+                System.Threading.Thread t = new System.Threading.Thread(ts);
+                t.Start();
+                OutputLog.WriteLine("Will download " + numberOfPages + " pages.");
                 }
             else
                 {
@@ -475,11 +321,125 @@ namespace BooruDownloader
 
 
             }
+
+        public virtual void tagEvaluation()
+            {
+            hasPages = readSite(site.START_PAGE_INDEX).Contains(site.CHECKTAGS_STRING);
+            }
+        protected HtmlNodeCollection getHtmlNodes(string RawHtml, string Xpath)
+            {
+            /*if (RawHtml == null || Xpath == null)
+            {
+                throw new ArgumentNullException();
+            }*/
+            try
+                {
+                //initialize HTML Documents
+                HTMLDoc.LoadHtml(RawHtml);//load Html from RAW Html string
+                HtmlNode nodo_p = HTMLDoc.DocumentNode; //Get Nodes from HTML Doc
+                return nodo_p.SelectNodes(Xpath); //Select all nodes with direct image link
+                }
+            catch (ArgumentNullException e)
+                {
+
+                OutputLog.WriteLine("GetHtmlNodes failed because " + e);
+
+                return null;
+                }
+            }
+
+        protected string getRawHtml(Uri url)
+            {
+            string OutputHTML;
+
+#if DEBUG
+            OutputLog.WriteLine("getRawHtml called with " + url);
+#endif
+
+
+            try
+                {
+                OutputHTML = Reader.DownloadString(url);
+                }
+            catch (WebException ex)
+                {
+                Error = "GetRawHtml failed because " + ex;
+                OutputLog.WriteLine(Error);
+                return null;
+                }
+            catch (ArgumentNullException ex)
+                {
+                Error = "You have to have an input " + ex;
+                OutputLog.WriteLine(Error);
+                throw ex;
+                }
+            return OutputHTML;
+            }
+        protected string readSite(uint page)
+            {
+            /* if (page == null)
+             {
+                 throw new ArgumentOutOfRangeException();
+             }*/
+            Uri URL;
+            string Page_Data = null;//RAW Html string initialization
+            String TmpUrl = site.SITE_DOMAIN + site.ACCESSPAGE_STRING + (page * site.PID_MULT).ToString() + site.POSTTAGS_STRING;//URL String initialization
+            foreach (string tag in tags)//Cycle to add each tag to URL
+                {
+                TmpUrl += tag + "+";//each tags must be separated by '+' so each tag is added to URL after '+'
+                }
+            TmpUrl = TmpUrl.Remove(TmpUrl.Length - 1);//removes the extra '+' from URL output
+            URL = new Uri(TmpUrl);
+            try
+                {
+                Page_Data = getRawHtml(URL);
+                }
+            catch (ArgumentNullException e)
+                {
+
+                OutputLog.WriteLine("URL Must have a value");
+                OutputLog.WriteLine("Error: " + e);
+                }
+            if (Page_Data == null) //In case of Webexception the following code is run
+                {
+                OutputLog.WriteLine("Cannot connect to Host");
+                OutputLog.WriteLine("Is Internet connection alive?");
+                }
+            return Page_Data; //Returns RAW HTLM string    
+            }
         }
 
     public class gelbooruDownloader : danbooruDownloader
         {
         public gelbooruDownloader(SiteData SiteData, string[] args) : base(SiteData, args) { }
+        public override int GetPagesNumber()
+            {
+            string texto = readSite(site.START_PAGE_INDEX);//Put RAW HTML in the String Texto
+            OutputLog.WriteLine(site.START_PAGE_INDEX);
+            if (!(texto == null)) //If the RAW HTML exist, do following code
+                {
+                string PageTemp = null; // Create string pointer to get inner text from Html Node
+                HtmlNodeCollection nodos_a = getHtmlNodes(texto, site.PAGENUMBER_XPATH); //Select 'a' nodes from 'div' with class='pagination'
+                try //Try to read nodes
+                    {
+                    foreach (HtmlNode var in nodos_a) // Cycle foreach node
+                        {
+                        PageTemp = var.GetAttributeValue("href", "false"); //Put the data in PageTemp variable
+                        //OutputLog.WriteLine(PageTemp);
+                        PageTemp = PageTemp.Substring((PageTemp.IndexOf("pid=") + 4));
+                        //OutputLog.WriteLine(PageTemp);
+                        }
+                    return ((Convert.ToInt32(PageTemp, 10) / site.PID_MULT) + 1);
+                    }
+                catch (NullReferenceException e) //If no div availavable, means it just have 1 page
+                    {
+                    OutputLog.WriteLine("Return 1 page because of " + e);
+                    return 1;	//return 1 page
+                    }
+                }
+            return 1;
+            }
+
         public override PostData GetPostData(string PostUrl)
             {
             if (PostUrl == null)
@@ -541,33 +501,6 @@ namespace BooruDownloader
             FileExtension = FileExtension.Replace("?" + ID, "");
             FileExtension = FileExtension.Substring(FileExtension.Length - 4, 4);
             return FileExtension;
-            }
-        public override int GetPagesNumber()
-            {
-            string texto = readSite(site.START_PAGE_INDEX);//Put RAW HTML in the String Texto
-            OutputLog.WriteLine(site.START_PAGE_INDEX);
-            if (!(texto == null)) //If the RAW HTML exist, do following code
-                {
-                string PageTemp = null; // Create string pointer to get inner text from Html Node
-                HtmlNodeCollection nodos_a = getHtmlNodes(texto, site.PAGENUMBER_XPATH); //Select 'a' nodes from 'div' with class='pagination'
-                try //Try to read nodes
-                    {
-                    foreach (HtmlNode var in nodos_a) // Cycle foreach node
-                        {
-                        PageTemp = var.GetAttributeValue("href", "false"); //Put the data in PageTemp variable
-                        //OutputLog.WriteLine(PageTemp);
-                        PageTemp = PageTemp.Substring((PageTemp.IndexOf("pid=") + 4));
-                        //OutputLog.WriteLine(PageTemp);
-                        }
-                    return ((Convert.ToInt32(PageTemp, 10) / site.PID_MULT) + 1);
-                    }
-                catch (NullReferenceException e) //If no div availavable, means it just have 1 page
-                    {
-                    OutputLog.WriteLine("Return 1 page because of " + e);
-                    return 1;	//return 1 page
-                    }
-                }
-            return 1;
             }
         }
 
@@ -653,5 +586,111 @@ namespace BooruDownloader
             {
             return readSite(site.START_PAGE_INDEX).Contains("<a class=\"directlink largeimg\"") || readSite(site.START_PAGE_INDEX).Contains("<a class=\"directlink smallimg\"");
             }
+        }
+
+    public class PostData
+        {
+        public int id;
+
+        public string link;
+
+        public string tags;
+
+        public PostData() { }
+        }
+    public class SiteData
+        {
+
+        public string ACCESSPAGE_STRING;
+
+        public string CHECKTAGS_STRING;
+
+        public bool DelayInConnections = false;
+
+        //public bool tagEvaluation;
+        public int DelayTime = 500;
+
+        public string FILEPATH_JOINER;
+
+        public string IMAGECONTAINER_XPATH;
+
+        public int NUMBER_OF_THREADS;
+
+        public string PAGENUMBER_XPATH;
+
+        public int PID_MULT = 1;
+
+        public string POSTLINKS_XPATH;
+
+        public string POSTTAGS_STRING;
+
+        public int SEGMENTDEPTH_FOR_ID;
+
+        public string SITE_DOMAIN;
+
+        public string SITE_NAME;
+
+        public uint START_PAGE_INDEX;
+
+        public string type = "danbooru";
+
+        public string USER_AGENT_STRING;
+
+        public SiteData() { }
+#if DEBUG
+        public void printValues()
+            {
+            Console.WriteLine(START_PAGE_INDEX);
+            Console.WriteLine(NUMBER_OF_THREADS);
+            Console.WriteLine(SEGMENTDEPTH_FOR_ID);
+            Console.WriteLine(SITE_DOMAIN);
+            Console.WriteLine(SITE_NAME);
+            Console.WriteLine(USER_AGENT_STRING);
+            Console.WriteLine(CHECKTAGS_STRING);
+            Console.WriteLine(ACCESSPAGE_STRING);
+            Console.WriteLine(POSTTAGS_STRING);
+            Console.WriteLine(PAGENUMBER_XPATH);
+            Console.WriteLine(POSTLINKS_XPATH);
+            Console.WriteLine(IMAGECONTAINER_XPATH);
+            Console.WriteLine(FILEPATH_JOINER);
+            Console.WriteLine(DelayInConnections);
+            Console.WriteLine(PID_MULT);
+            Console.WriteLine(type);
+            }
+#endif
+        }
+    }
+
+public class CombinedWriter : StreamWriter
+    {
+    TextWriter console;
+    public CombinedWriter(string path, bool append, Encoding encoding, int bufferSize, TextWriter console)
+        : base(path, append, encoding, bufferSize)
+        {
+        this.console = console;
+        }
+    public override void Write(string value)
+        {
+        console.Write(value);
+        base.Write(value);
+        }
+    public override void WriteLine(string value)
+        {
+        Console.WriteLine(value);
+        base.WriteLine(value);
+        }
+    }
+
+static class Tools
+    {
+    public static string ScrubFileName(string value)
+        {
+        StringBuilder sb = new StringBuilder(value);
+        char[] invalid = Path.GetInvalidFileNameChars();
+        foreach (char item in invalid)
+            {
+            sb.Replace(item.ToString(), "");
+            }
+        return sb.ToString();
         }
     }
